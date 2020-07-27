@@ -44,6 +44,9 @@ define :scalarium_deploy do
   directory "#{deploy[:deploy_to]}/shared/cached-copy" do
     recursive true
     action :delete
+    only_if do
+      deploy[:delete_cached_copy]
+    end
   end
 
   ruby_block "change HOME to #{deploy[:home]} for source checkout" do
@@ -63,7 +66,11 @@ define :scalarium_deploy do
       environment deploy[:environment]
       symlink_before_migrate deploy[:symlink_before_migrate]
       action deploy[:action]
-      restart_command "sleep #{deploy[:sleep_before_restart]} && #{node[:scalarium][:rails_stack][:restart_command]}"
+
+      if deploy[:application_type] == 'rails'
+        restart_command "sleep #{deploy[:sleep_before_restart]} && #{node[:scalarium][:rails_stack][:restart_command]}"
+      end
+
       case deploy[:scm][:scm_type].to_s
       when 'git'
         scm_provider :git
